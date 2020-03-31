@@ -6,10 +6,9 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"time"
 )
 
-func (c *Client) Ready (ctx context.Context) (*ReadyResult, error) {
+func (c *Client) Ready(ctx context.Context) (*ReadyResult, error) {
 	log.Printf("[DEBUG] Pinging resource ")
 	pingUrl, _ := url.Parse(c.url.String())
 	pingUrl.Path = "/ready"
@@ -18,17 +17,21 @@ func (c *Client) Ready (ctx context.Context) (*ReadyResult, error) {
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
+	req.Header.Add("Content-Type", "application/json; charset=utf-8")
+	resp, err := c.httpClient.Do(req)
 
-	defer req.Body.Close()
+	defer resp.Body.Close()
 	readyResult := &ReadyResult{}
-	if err := json.NewDecoder(req.Body).Decode(readyResult); err != nil {
+
+	if err := json.NewDecoder(resp.Body).Decode(readyResult); err != nil {
 		return nil, err
 	}
 	return readyResult, nil
 }
 
 type ReadyResult struct {
-	Started *time.Time `json:"started,omitempty"`
-	Status  *string    `json:"status,omitempty"`
-	Up      *string    `json:"up,omitempty"`
+	Started *string `json:"started,omitempty"`
+	Status  *string `json:"status,omitempty"`
+	Up      *string `json:"up,omitempty"`
 }
