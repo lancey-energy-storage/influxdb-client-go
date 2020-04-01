@@ -1,4 +1,4 @@
-module github.com/lancey-energy-storage/influxdb-client-go/
+module github.com/lancey-energy-storage/influxdb-client-go
 
 require (
 	github.com/google/go-cmp v0.2.0 // test dependency
