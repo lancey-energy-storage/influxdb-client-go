@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/influxdata/influxdb-client-go/internal/ast"
+	"github.com/lancey-energy-storage/influxdb-client-go/internal/ast"
 )
 
 const (

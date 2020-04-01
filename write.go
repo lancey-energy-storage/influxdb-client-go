@@ -14,7 +14,7 @@ import (
 	"path"
 	"strconv"
 
-	"github.com/influxdata/influxdb-client-go/internal/gzip"
+	"github.com/lancey-energy-storage/influxdb-client-go/internal/gzip"
 	lp "github.com/influxdata/line-protocol"
 )
 
