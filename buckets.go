@@ -1,6 +1,7 @@
 package influxdb
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"log"
@@ -61,6 +62,48 @@ func (c *Client) GetBuckets(limit int, name string, offset int, org string, orgI
 	return bucketSource, nil
 }
 
+func (c *Client) CreateBucket(description string, name string, orgID string, retentionRules []RetentionRules, rp string) (*BucketCreate, error) {
+	if name == "" {
+		return nil, errors.New("name is needed to create a new bucket")
+	}
+	if len(retentionRules) == 0 {
+		return nil, errors.New("retentions rules is/are needed to create a new bucket")
+	}
+	log.Printf("[DEBUG] Creation of a new bucket")
+
+	inputData, err := json.Marshal(SetupCreateBucket{
+		Description:    description,
+		Name:           name,
+		OrgID:          orgID,
+		RetentionRules: retentionRules,
+		Rp:             rp,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", c.url.String()+"/buckets", bytes.NewBuffer(inputData))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 201 {
+		return nil, errors.New(resp.Status)
+	}
+
+	bucketCreate := &BucketCreate{}
+	if err := json.NewDecoder(resp.Body).Decode(bucketCreate); err != nil {
+		return nil, err
+	}
+
+	return bucketCreate, nil
+}
+
 type BucketSource struct {
 	Links struct {
 		Next string `json:"next"`
@@ -98,4 +141,47 @@ type BucketSource struct {
 		Color       string `json:"color"`
 		Description string `json:"description"`
 	} `json:"labels"`
+}
+
+type BucketCreate struct {
+	Links struct {
+		Labels  string `json:"labels"`
+		Logs    string `json:"logs"`
+		Members string `json:"members"`
+		Org     string `json:"org"`
+		Owners  string `json:"owners"`
+		Self    string `json:"self"`
+		Write   string `json:"write"`
+	} `json:"links"`
+	Id             string `json:"id"`
+	Type           string `json:"user"`
+	Name           string `json:"name"`
+	Description    string `json:"description"`
+	OrgID          string `json:"orgID"`
+	Rp             string `json:"rp"`
+	CreatedAt      string `json:"createdAt"`
+	UpdatedAt      string `json:"updatedAt"`
+	RetentionRules []struct {
+		Type         string `json:"type"`
+		EverySeconds int    `json:"everySeconds"`
+	} `json:"retentionRules"`
+	Labels []struct {
+		Id         string `json:"id"`
+		OrgID      string `json:"orgID"`
+		Name       string `json:"name"`
+		Properties string `json:"properties"`
+	} `json:"labels"`
+}
+
+type RetentionRules struct {
+	EverySeconds int
+	Type         string
+}
+
+type SetupCreateBucket struct {
+	Description    string `json:"description"`
+	Name           string `json:"name"`
+	OrgID          string `json:"orgID"`
+	RetentionRules []RetentionRules
+	Rp             string `json:"rp"`
 }
