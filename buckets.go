@@ -104,6 +104,35 @@ func (c *Client) CreateBucket(description string, name string, orgID string, ret
 	return bucketCreate, nil
 }
 
+func (c *Client) GetBucketByID(bucketID string) (*SimpleBucket, error) {
+	if bucketID == "" {
+		return nil, errors.New("a bucket id is required")
+	}
+
+	log.Printf("[DEBUG] Get bucket with id: %s", bucketID)
+
+	req, err := http.NewRequest(http.MethodGet, c.url.String()+"/buckets/"+bucketID, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, errors.New(resp.Status)
+	}
+
+	simpleBucket := &SimpleBucket{}
+	if err := json.NewDecoder(resp.Body).Decode(simpleBucket); err != nil {
+		return nil, err
+	}
+
+	return simpleBucket, nil
+}
+
 type BucketSource struct {
 	Links struct {
 		Next string `json:"next"`
@@ -184,4 +213,37 @@ type SetupCreateBucket struct {
 	OrgID          string `json:"orgID"`
 	RetentionRules []RetentionRules
 	Rp             string `json:"rp"`
+}
+
+type SimpleBucket struct {
+	Links struct {
+		Labels  string `json:"labels"`
+		Logs    string `json:"logs"`
+		Members string `json:"members"`
+		Org     string `json:"org"`
+		Owners  string `json:"owners"`
+		Self    string `json:"self"`
+		Write   string `json:"write"`
+	} `json:"links"`
+	Id             string `json:"id"`
+	Type           string `json:"user"`
+	Name           string `json:"name"`
+	Description    string `json:"description"`
+	OrgID          string `json:"orgID"`
+	Rp             string `json:"rp"`
+	CreatedAt      string `json:"createdAt"`
+	UpdatedAt      string `json:"updatedAt"`
+	RetentionRules []struct {
+		Type         string `json:"type"`
+		EverySeconds int    `json:"everySeconds"`
+	} `json:"retentionRules"`
+	Labels []struct {
+		Id         string `json:"id"`
+		OrgID      string `json:"orgID"`
+		Name       string `json:"name"`
+		Properties struct {
+			Color       string `json:"color"`
+			Description string `json:"description"`
+		} `json:"properties"`
+	} `json:"labels"`
 }
