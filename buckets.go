@@ -2,6 +2,7 @@ package influxdb
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 )
@@ -19,6 +20,11 @@ func (c *Client) GetBucketsInSource(id string) (*BucketSource, error) {
 	resp, err := c.httpClient.Do(req)
 
 	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, errors.New(resp.Status)
+	}
+
 	bucketSource := &BucketSource{}
 	if err := json.NewDecoder(resp.Body).Decode(bucketSource); err != nil {
 		return nil, err
