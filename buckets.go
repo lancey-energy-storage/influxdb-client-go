@@ -177,6 +177,30 @@ func (c *Client) UpdateABucket(bucketID string, description string, labels []Lab
 	return updateBucket, nil
 }
 
+func (c *Client) DeleteABucket(bucketID string) error {
+	if bucketID == "" {
+		return errors.New("a bucketID should be specified")
+	}
+
+	log.Printf("[DEBUG] Deleting bucket with id: %s", bucketID)
+
+	req, err := http.NewRequest("DELETE", c.url.String()+"/buckets/"+bucketID, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 204 {
+		return errors.New(resp.Status)
+	}
+
+	return nil
+}
+
 type BucketSource struct {
 	Links struct {
 		Next string `json:"next"`
