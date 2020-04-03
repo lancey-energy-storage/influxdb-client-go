@@ -381,6 +381,35 @@ func (c *Client) RemoveMemberOfBucket(bucketID string, userID string) error {
 	return nil
 }
 
+func (c *Client) GetOwnersOfBucket(bucketID string) (*BucketOwner, error) {
+	if bucketID == "" {
+		return nil, errors.New("a bucket id is required")
+	}
+
+	log.Printf("[DEBUG] Getting owners of bucket with id %s", bucketID)
+
+	req, err := http.NewRequest("GET", c.url.String()+"/buckets/"+bucketID+"/owners", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, errors.New(resp.Status)
+	}
+
+	bucketOwner := &BucketOwner{}
+	if err := json.NewDecoder(resp.Body).Decode(bucketOwner); err != nil {
+		return nil, err
+	}
+
+	return bucketOwner, nil
+}
+
 type BucketSource struct {
 	Links struct {
 		Next string `json:"next"`
@@ -554,4 +583,21 @@ type BucketMemberAdded struct {
 		Logs string `json:"logs"`
 	} `json:"links"`
 	Role string `json:"role"`
+}
+
+type BucketOwner struct {
+	Links struct {
+		Self string `json:"self"`
+	} `json:"links"`
+	Users []struct {
+		Id      string `json:"id"`
+		OauthID string `json:"oauthID"`
+		Name    string `json:"name"`
+		Status  string `json:"status"`
+		Links   struct {
+			Self string `json:"self"`
+			Logs string `json:"logs"`
+		} `json:"links"`
+		Role string `json:"role"`
+	} `json:"users"`
 }
