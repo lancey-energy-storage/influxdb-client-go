@@ -354,6 +354,33 @@ func (c *Client) AddMemberToBucket(bucketID string, memberID string, memberName 
 	return bucketMemberAdded, nil
 }
 
+func (c *Client) RemoveMemberOfBucket(bucketID string, userID string) error {
+	if bucketID == "" {
+		return errors.New("a bucket id is required")
+	}
+	if userID == "" {
+		return errors.New("a member id is required")
+	}
+
+	log.Printf("[DEBUG] Removing member with id %s to bucket with id %s", userID, bucketID)
+
+	req, err := http.NewRequest("DELETE", c.url.String()+"/buckets/"+bucketID+"/members/"+userID, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 204 {
+		return errors.New(resp.Status)
+	}
+
+	return nil
+}
+
 type BucketSource struct {
 	Links struct {
 		Next string `json:"next"`
