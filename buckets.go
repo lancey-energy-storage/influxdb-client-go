@@ -444,6 +444,33 @@ func (c *Client) AddOwnerToBucket(bucketID string, ownerID string, ownerName str
 	return bucketOwnerAdded, nil
 }
 
+func (c *Client) RemoveOwnerFromBucket(bucketID string, ownerID string) error {
+	if bucketID == "" {
+		return errors.New("a bucket id is required")
+	}
+	if ownerID == "" {
+		return errors.New("an owner id is required")
+	}
+
+	log.Printf("[DEBUG] Removing the owner with id %s to the bucket with id %s", ownerID, bucketID)
+
+	req, err := http.NewRequest("DELETE", c.url.String()+"/buckets/"+bucketID+"/owners/"+ownerID, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 204 {
+		return errors.New(resp.Status)
+	}
+
+	return nil
+}
+
 type BucketSource struct {
 	Links struct {
 		Next string `json:"next"`
