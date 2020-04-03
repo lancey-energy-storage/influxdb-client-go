@@ -265,6 +265,33 @@ func (c *Client) AddLabelToBucket(bucketID string, labelID string) (*LabelsOfBuc
 	return labelsOfBucket, nil
 }
 
+func (c *Client) DeleteALabelFromBucket(bucketID string, labelID string) error {
+	if bucketID == "" {
+		return errors.New("a bucket id is required")
+	}
+	if labelID == "" {
+		return errors.New("a label id is required")
+	}
+
+	log.Printf("[DEBUG] Deleting label id %s of bucket id %s", labelID, bucketID)
+
+	req, err := http.NewRequest("DELETE", c.url.String()+"/buckets/"+bucketID+"/labels/"+labelID, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 204 {
+		return errors.New(resp.Status)
+	}
+
+	return nil
+}
+
 type BucketSource struct {
 	Links struct {
 		Next string `json:"next"`
