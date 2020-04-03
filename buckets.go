@@ -133,6 +133,50 @@ func (c *Client) GetBucketByID(bucketID string) (*SimpleBucket, error) {
 	return simpleBucket, nil
 }
 
+func (c *Client) UpdateABucket(bucketId string, description string, labels []Labels, name string, orgID string, retentionRules []RetentionRules, rp string) (*SimpleBucket, error) {
+	if name == "" {
+		return nil, errors.New("name should be specified")
+	}
+	if len(retentionRules) == 0 {
+		return nil, errors.New("retention rules should be specified")
+	}
+
+	log.Printf("[DEBUG] Updating the bucket with id: %s", bucketId)
+
+	inputData, err := json.Marshal(SetupUpdateBucket{
+		Description:    description,
+		Labels:         labels,
+		Name:           name,
+		OrgID:          orgID,
+		RetentionRules: retentionRules,
+		Rp:             rp,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", c.url.String()+"/buckets/"+bucketId, bytes.NewBuffer(inputData))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, errors.New(resp.Status)
+	}
+
+	updateBucket := &SimpleBucket{}
+	if err := json.NewDecoder(resp.Body).Decode(updateBucket); err != nil {
+		return nil, err
+	}
+
+	return updateBucket, nil
+}
+
 type BucketSource struct {
 	Links struct {
 		Next string `json:"next"`
@@ -246,4 +290,18 @@ type SimpleBucket struct {
 			Description string `json:"description"`
 		} `json:"properties"`
 	} `json:"labels"`
+}
+
+type Labels struct {
+	Name       string
+	Properties string
+}
+
+type SetupUpdateBucket struct {
+	Description    string `json:"description"`
+	Labels         []Labels
+	Name           string `json:"name"`
+	OrgID          string `json:"orgID"`
+	RetentionRules []RetentionRules
+	Rp             string `json:"rp"`
 }
