@@ -202,6 +202,35 @@ func (c *Client) DeleteABucket(bucketID string) error {
 	return nil
 }
 
+func (c *Client) ListLabelsForABucket(bucketID string) (*LabelsOfBucket, error) {
+	if bucketID == "" {
+		return nil, errors.New("a bucket id is required")
+	}
+
+	log.Printf("[DEBUG] Getting labels for bucket with id: %s", bucketID)
+
+	req, err := http.NewRequest("GET", c.url.String()+"/buckets/"+bucketID+"/labels", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, errors.New(resp.Status)
+	}
+
+	labelsOfBucket := &LabelsOfBucket{}
+	if err := json.NewDecoder(resp.Body).Decode(labelsOfBucket); err != nil {
+		return nil, err
+	}
+
+	return labelsOfBucket, nil
+}
+
 func (c *Client) AddLabelToBucket(bucketID string, labelID string) (*LabelsOfBucket, error) {
 	if bucketID == "" {
 		return nil, errors.New("a bucket id is required to add label to it")
