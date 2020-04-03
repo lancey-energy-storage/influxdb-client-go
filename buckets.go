@@ -133,7 +133,7 @@ func (c *Client) GetBucketByID(bucketID string) (*SimpleBucket, error) {
 	return simpleBucket, nil
 }
 
-func (c *Client) UpdateABucket(bucketId string, description string, labels []Labels, name string, orgID string, retentionRules []RetentionRules, rp string) (*SimpleBucket, error) {
+func (c *Client) UpdateABucket(bucketID string, description string, labels []Labels, name string, orgID string, retentionRules []RetentionRules, rp string) (*SimpleBucket, error) {
 	if name == "" {
 		return nil, errors.New("name should be specified")
 	}
@@ -141,7 +141,7 @@ func (c *Client) UpdateABucket(bucketId string, description string, labels []Lab
 		return nil, errors.New("retention rules should be specified")
 	}
 
-	log.Printf("[DEBUG] Updating the bucket with id: %s", bucketId)
+	log.Printf("[DEBUG] Updating the bucket with id: %s", bucketID)
 
 	inputData, err := json.Marshal(SetupUpdateBucket{
 		Description:    description,
@@ -155,7 +155,7 @@ func (c *Client) UpdateABucket(bucketId string, description string, labels []Lab
 		return nil, err
 	}
 
-	req, err := http.NewRequest("PATCH", c.url.String()+"/buckets/"+bucketId, bytes.NewBuffer(inputData))
+	req, err := http.NewRequest("PATCH", c.url.String()+"/buckets/"+bucketID, bytes.NewBuffer(inputData))
 	if err != nil {
 		return nil, err
 	}
