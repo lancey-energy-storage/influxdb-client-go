@@ -292,6 +292,68 @@ func (c *Client) DeleteALabelFromBucket(bucketID string, labelID string) error {
 	return nil
 }
 
+func (c *Client) GetListUsersOfBucket(bucketID string) (*BucketUsers, error) {
+	if bucketID == "" {
+		return nil, errors.New("a bucket id is required")
+	}
+	log.Printf("[DEBUG] Listing members of bucket id: %s", bucketID)
+
+	req, err := http.NewRequest("GET", c.url.String()+"/buckets/"+bucketID+"/members", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, errors.New(resp.Status)
+	}
+
+	bucketUsers := &BucketUsers{}
+	if err := json.NewDecoder(resp.Body).Decode(bucketUsers); err != nil {
+		return nil, err
+	}
+
+	return bucketUsers, nil
+}
+
+func (c *Client) AddMemberToBucket(bucketID string, memberID string, memberName string) (*BucketMemberAdded, error) {
+	if bucketID == "" {
+		return nil, errors.New("a bucket id is required")
+	}
+	if memberID == "" {
+		return nil, errors.New("a member id is required")
+	}
+
+	log.Printf("[DEBUG] Adding the member with id %s to the bucket with id %s", memberID, bucketID)
+
+	inputData := fmt.Sprintf("{\"id\": \"%s\", \"name\": \"%s\"}", memberID, memberName)
+
+	req, err := http.NewRequest(http.MethodPost, c.url.String()+"/buckets/"+bucketID+"/members", bytes.NewBuffer([]byte(inputData)))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 201 {
+		return nil, errors.New(resp.Status)
+	}
+
+	bucketMemberAdded := &BucketMemberAdded{}
+	if err := json.NewDecoder(resp.Body).Decode(bucketMemberAdded); err != nil {
+		return nil, err
+	}
+
+	return bucketMemberAdded, nil
+}
+
 type BucketSource struct {
 	Links struct {
 		Next string `json:"next"`
@@ -436,4 +498,33 @@ type LabelsOfBucket struct {
 		Self string `json:"self"`
 		Prev string `json:"prev"`
 	} `json:"links"`
+}
+
+type BucketUsers struct {
+	Links struct {
+		Self string `json:"self"`
+	} `json:"links"`
+	Users []struct {
+		Id      string `json:"id"`
+		OauthID string `json:"oauthID"`
+		Name    string `json:"name"`
+		Status  string `json:"status"`
+		Links   []struct {
+			Self string `json:"self"`
+			Logs string `json:"logs"`
+		} `json:"links"`
+		Role string `json:"role"`
+	} `json:"users"`
+}
+
+type BucketMemberAdded struct {
+	Id      string `json:"id"`
+	OauthID string `json:"oauthID"`
+	Name    string `json:"name"`
+	Status  string `json:"status"`
+	Links   struct {
+		Self string `json:"self"`
+		Logs string `json:"logs"`
+	} `json:"links"`
+	Role string `json:"role"`
 }
