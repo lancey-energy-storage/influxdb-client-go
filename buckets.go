@@ -410,6 +410,40 @@ func (c *Client) GetOwnersOfBucket(bucketID string) (*BucketOwner, error) {
 	return bucketOwner, nil
 }
 
+func (c *Client) AddOwnerToBucket(bucketID string, ownerID string, ownerName string) (*BucketOwnerAdded, error) {
+	if bucketID == "" {
+		return nil, errors.New("a bucket id is required")
+	}
+	if ownerID == "" {
+		return nil, errors.New("an owner id is required")
+	}
+
+	log.Printf("[DEBUG] Adding an owner with id %s to the bucket with id %s", ownerID, bucketID)
+
+	inputData := fmt.Sprintf("{\"id\": \"%s\", \"name\": \"%s\"}", ownerID, ownerName)
+
+	req, err := http.NewRequest(http.MethodPost, c.url.String()+"/buckets/"+bucketID+"/owners", bytes.NewBuffer([]byte(inputData)))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 201 {
+		return nil, errors.New(resp.Status)
+	}
+
+	bucketOwnerAdded := &BucketOwnerAdded{}
+	if err := json.NewDecoder(resp.Body).Decode(bucketOwnerAdded); err != nil {
+		return nil, err
+	}
+
+	return bucketOwnerAdded, nil
+}
+
 type BucketSource struct {
 	Links struct {
 		Next string `json:"next"`
@@ -600,4 +634,16 @@ type BucketOwner struct {
 		} `json:"links"`
 		Role string `json:"role"`
 	} `json:"users"`
+}
+
+type BucketOwnerAdded struct {
+	Id      string `json:"id"`
+	OauthID string `json:"oauthID"`
+	Name    string `json:"name"`
+	Status  string `json:"status"`
+	Links   struct {
+		Self string `json:"self"`
+		Logs string `json:"logs"`
+	} `json:"links"`
+	Role string `json:"role"`
 }
