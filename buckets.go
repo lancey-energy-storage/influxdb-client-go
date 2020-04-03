@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -201,6 +202,40 @@ func (c *Client) DeleteABucket(bucketID string) error {
 	return nil
 }
 
+func (c *Client) AddLabelToBucket(bucketID string, labelID string) (*LabelsOfBucket, error) {
+	if bucketID == "" {
+		return nil, errors.New("a bucket id is required to add label to it")
+	}
+	if len(labelID) == 0 {
+		return nil, errors.New("an array of one label id is required")
+	}
+
+	log.Printf("[DEBUG] Adding label to the bucket with the id: %s", bucketID)
+
+	inputData := fmt.Sprintf("{\"labelID\": \"%s\"}", labelID)
+
+	req, err := http.NewRequest(http.MethodPost, c.url.String()+"/buckets/"+bucketID+"/labels", bytes.NewBuffer([]byte(inputData)))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 201 {
+		return nil, errors.New(resp.Status)
+	}
+
+	labelsOfBucket := &LabelsOfBucket{}
+	if err := json.NewDecoder(resp.Body).Decode(labelsOfBucket); err != nil {
+		return nil, err
+	}
+
+	return labelsOfBucket, nil
+}
+
 type BucketSource struct {
 	Links struct {
 		Next string `json:"next"`
@@ -328,4 +363,21 @@ type SetupUpdateBucket struct {
 	OrgID          string `json:"orgID"`
 	RetentionRules []RetentionRules
 	Rp             string `json:"rp"`
+}
+
+type LabelsOfBucket struct {
+	Labels []struct {
+		Id         string `json:"id"`
+		OrgId      string `json:"orgID"`
+		Name       string `json:"name"`
+		Properties struct {
+			Color       string `json:"color"`
+			Description string `json:"description"`
+		} `json:"properties"`
+	} `json:"labels"`
+	Links struct {
+		Next string `json:"next"`
+		Self string `json:"self"`
+		Prev string `json:"prev"`
+	} `json:"links"`
 }
