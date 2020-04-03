@@ -471,6 +471,42 @@ func (c *Client) RemoveOwnerFromBucket(bucketID string, ownerID string) error {
 	return nil
 }
 
+func (c *Client) GetLogsOfBucket(bucketID string, limit int, offset int) (*BucketLogs, error) {
+	if bucketID == "" {
+		return nil, errors.New("a bucket id is required")
+	}
+	if limit == 0 || limit > 100 {
+		return nil, errors.New("limit needs to be between [ 1 ... 100 ]")
+	}
+	if offset < 0 {
+		return nil, errors.New("offset needs to be granter or equal to 0")
+	}
+
+	log.Printf("[DEBUG] Get logs of bucket with id %s", bucketID)
+
+	params := "?limit=" + strconv.Itoa(limit) + "&offset=" + strconv.Itoa(offset)
+	req, err := http.NewRequest(http.MethodGet, c.url.String()+"/buckets/"+bucketID+"/logs"+params, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, errors.New(resp.Status)
+	}
+
+	bucketLogs := &BucketLogs{}
+	if err := json.NewDecoder(resp.Body).Decode(bucketLogs); err != nil {
+		return nil, err
+	}
+
+	return bucketLogs, nil
+}
+
 type BucketSource struct {
 	Links struct {
 		Next string `json:"next"`
@@ -673,4 +709,20 @@ type BucketOwnerAdded struct {
 		Logs string `json:"logs"`
 	} `json:"links"`
 	Role string `json:"role"`
+}
+
+type BucketLogs struct {
+	Logs []struct {
+		Description string `json:"description"`
+		Time        string `json:"time"`
+		UserID      string `json:"userID"`
+		Links       struct {
+			User string `json:"user"`
+		} `json:"links"`
+	} `json:"logs"`
+	Links struct {
+		Next string `json:"next"`
+		Self string `json:"self"`
+		Prev string `json:"prev"`
+	} `json:"links"`
 }
