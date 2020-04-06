@@ -141,6 +141,33 @@ func (c *Client) UpdateUser(userID string, name string, oauthID string, status s
 	return user, nil
 }
 
+func (c *Client) DeleteUser(userID string) error {
+	if userID == "" {
+		return errors.New("a user id is required")
+	}
+
+	log.Printf("[DEBUG] Deleting the user with id %s", userID)
+
+	req, err := http.NewRequest(http.MethodDelete, c.url.String()+"/users/"+userID, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 204 {
+		return errors.New(resp.Status)
+	}
+
+	return nil
+}
+
 type UserList struct {
 	Links struct {
 		Self string `json:"self"`
