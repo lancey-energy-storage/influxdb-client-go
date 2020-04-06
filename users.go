@@ -84,6 +84,48 @@ func (c *Client) GetUserById(userID string) (*User, error) {
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Authorization", c.authorization)
 	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, errors.New(resp.Status)
+	}
+
+	user := &User{}
+	if err := json.NewDecoder(resp.Body).Decode(user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (c *Client) UpdateUser(userID string, name string, oauthID string, status string) (*User, error) {
+	if userID == "" {
+		return nil, errors.New("a user id is required")
+	}
+	if name == "" {
+		return nil, errors.New("a name is required")
+	}
+	log.Printf("[DEBUG] Updating user informations with id %s", userID)
+
+	inputData, err := json.Marshal(NewUser{
+		Name:    name,
+		OauthID: oauthID,
+		Status:  status,
+	})
+
+	req, err := http.NewRequest(http.MethodPatch, c.url.String()+"/users/"+userID, bytes.NewBuffer(inputData))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
 
 	defer resp.Body.Close()
 
