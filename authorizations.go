@@ -1,6 +1,7 @@
 package influxdb
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"log"
@@ -31,6 +32,49 @@ func (c *Client) GetAllAuthorizations(org string, orgID string, user string, use
 	}
 
 	return authorizationsList, nil
+}
+
+func (c *Client) CreateAuthorization(description string, orgID string, permissions []Permissions, status string) (*AuthorizationCreated, error) {
+	if orgID == "" {
+		return nil, errors.New("an org id is required")
+	}
+	if len(permissions) == 0 {
+		return nil, errors.New("a list of permissions is required")
+	}
+
+	log.Printf("[DEBUG] Posting a new permission")
+
+	inputData, err := json.Marshal(SetupNewAuthorization{
+		Description: description,
+		OrgID:       orgID,
+		Permissions: permissions,
+		Status:      status,
+	})
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest(http.MethodPost, c.url.String()+"/authorizations", bytes.NewBuffer(inputData))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 201 {
+		return nil, errors.New(resp.Status)
+	}
+
+	authorizationCreated := &AuthorizationCreated{}
+	if err := json.NewDecoder(resp.Body).Decode(authorizationCreated); err != nil {
+		return nil, err
+	}
+
+	return authorizationCreated, nil
 }
 
 type AuthorizationsList struct {
@@ -65,4 +109,51 @@ type AuthorizationsList struct {
 			User string `json:"user"`
 		} `json:"links"`
 	} `json:"authorizations"`
+}
+
+type Permissions struct {
+	Action   string   `json:"action"`
+	Resource Resource `json:"resource"`
+}
+
+type Resource struct {
+	Id    string `json:"id"`
+	Name  string `json:"name"`
+	Org   string `json:"org"`
+	OrgID string `json:"orgID"`
+	Type  string `json:"type"`
+}
+
+type AuthorizationCreated struct {
+	Status      string `json:"status"`
+	Description string `json:"description"`
+	CreatedAt   string `json:"createdAt"`
+	UpdatedAt   string `json:"updatedAt"`
+	OrgID       string `json:"orgID"`
+	Permissions []struct {
+		Action   string `json:"action"`
+		Resource struct {
+			Type  string `json:"type"`
+			Id    string `json:"id"`
+			Name  string `json:"name"`
+			OrgId string `json:"orgID"`
+			Org   string `json:"org"`
+		} `json:"resource"`
+	} `json:"permissions"`
+	Id     string `json:"id"`
+	Token  string `json:"token"`
+	UserID string `json:"userID"`
+	User   string `json:"user"`
+	Org    string `json:"user"`
+	Links  struct {
+		Self string `json:"self"`
+		User string `json:"user"`
+	} `json:"links"`
+}
+
+type SetupNewAuthorization struct {
+	Description string        `json:"description"`
+	OrgID       string        `json:"orgID"`
+	Permissions []Permissions `json:"permissions"`
+	Status      string        `json:"status"`
 }
