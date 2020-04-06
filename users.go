@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 func (c *Client) GetAllUsers() (*UserList, error) {
@@ -201,6 +202,44 @@ func (c *Client) UpdatePasswordOfUser(userID string, password string) error {
 	return nil
 }
 
+func (c *Client) GetLogsOfUser(userID string, limit int, offset int) (*UserLogs, error) {
+	if userID == "" {
+		return nil, errors.New("a user id is required")
+	}
+	if limit == 0 || limit > 100 {
+		return nil, errors.New("limit needs to be between [ 1 ... 100 ]")
+	}
+	if offset < 0 {
+		return nil, errors.New("offset needs to be granter or equal to 0")
+	}
+
+	log.Printf("[DEBUG] Get logs of user with id: %s", userID)
+
+	params := "?limit=" + strconv.Itoa(limit) + "&offset=" + strconv.Itoa(offset)
+	req, err := http.NewRequest(http.MethodGet, c.url.String()+"/users/"+userID+"/logs"+params, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, errors.New(resp.Status)
+	}
+
+	userLogs := &UserLogs{}
+	if err := json.NewDecoder(resp.Body).Decode(userLogs); err != nil {
+		return nil, err
+	}
+
+	return userLogs, nil
+}
+
 type UserList struct {
 	Links struct {
 		Self string `json:"self"`
@@ -227,4 +266,20 @@ type NewUser struct {
 
 type Password struct {
 	Password string `json:"password"`
+}
+
+type UserLogs struct {
+	Logs []struct {
+		Description string `json:"description"`
+		Time        string `json:"time"`
+		UserID      string `json:"userID"`
+		Links       struct {
+			User string `json:"user"`
+		} `json:"links"`
+	} `json:"logs"`
+	Links struct {
+		Next string `json:"next"`
+		Self string `json:"self"`
+		Prev string `json:"prev"`
+	} `json:"links"`
 }
