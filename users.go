@@ -168,6 +168,39 @@ func (c *Client) DeleteUser(userID string) error {
 	return nil
 }
 
+func (c *Client) UpdatePasswordOfUser(userID string, password string) error {
+	if userID == "" {
+		return errors.New("a user id is required")
+	}
+	if password == "" {
+		return errors.New("a password is required")
+	}
+
+	log.Printf("[DEBUG] updating password for user with id %s", userID)
+
+	inputData, err := json.Marshal(Password{
+		Password: password,
+	})
+	req, err := http.NewRequest(http.MethodPut, c.url.String()+"/users/"+userID+"/password", bytes.NewBuffer(inputData))
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 204 {
+		return errors.New(resp.Status)
+	}
+
+	return nil
+}
+
 type UserList struct {
 	Links struct {
 		Self string `json:"self"`
@@ -190,4 +223,8 @@ type NewUser struct {
 	Name    string `json:"name"`
 	OauthID string `json:"oauthID"`
 	Status  string `json:"status"`
+}
+
+type Password struct {
+	Password string `json:"password"`
 }
