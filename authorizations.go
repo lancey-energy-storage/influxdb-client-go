@@ -146,6 +146,32 @@ func (c *Client) UpdateAnAuthorizationStatus(authID string, description string, 
 	return authorizationDetails, nil
 }
 
+func (c *Client) DeleteAnAuthorization(authID string) error {
+	if authID == "" {
+		return errors.New("an auth id is required")
+	}
+
+	log.Printf("[DEBUG] Delete the authorization with id %s", authID)
+
+	req, err := http.NewRequest(http.MethodDelete, c.url.String()+"/authorizations/"+authID, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 204 {
+		return errors.New(resp.Status)
+	}
+
+	return nil
+}
+
 type AuthorizationsList struct {
 	Links struct {
 		Next string `json:"next"`
