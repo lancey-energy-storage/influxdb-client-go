@@ -108,6 +108,44 @@ func (c *Client) GetAuthorizationById(authID string) (*AuthorizationDetails, err
 	return authorizationDetails, nil
 }
 
+func (c *Client) UpdateAnAuthorizationStatus(authID string, description string, status string) (*AuthorizationDetails, error) {
+	if authID == "" {
+		return nil, errors.New("an auth id is required")
+	}
+
+	log.Printf("[DEBUG] Updating the status of the authorization with id %s", authID)
+
+	inputData, err := json.Marshal(Status{
+		Description: description,
+		Status:      status,
+	})
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest(http.MethodPatch, c.url.String()+"/authorizations/"+authID, bytes.NewBuffer(inputData))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, errors.New(resp.Status)
+	}
+
+	authorizationDetails := &AuthorizationDetails{}
+	if err := json.NewDecoder(resp.Body).Decode(authorizationDetails); err != nil {
+		return nil, err
+	}
+
+	return authorizationDetails, nil
+}
+
 type AuthorizationsList struct {
 	Links struct {
 		Next string `json:"next"`
@@ -153,6 +191,11 @@ type Resource struct {
 	Org   string `json:"org"`
 	OrgID string `json:"orgID"`
 	Type  string `json:"type"`
+}
+
+type Status struct {
+	Description string `json:"description"`
+	Status      string `json:"status"`
 }
 
 type AuthorizationCreated struct {
