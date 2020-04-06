@@ -77,6 +77,37 @@ func (c *Client) CreateAuthorization(description string, orgID string, permissio
 	return authorizationCreated, nil
 }
 
+func (c *Client) GetAuthorizationById(authID string) (*AuthorizationDetails, error) {
+	if authID == "" {
+		return nil, errors.New("a auth id is required")
+	}
+
+	log.Printf("[DEBUG] Getting the authorization with id %s", authID)
+
+	req, err := http.NewRequest(http.MethodGet, c.url.String()+"/authorizations/"+authID, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", c.authorization)
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, errors.New(resp.Status)
+	}
+
+	authorizationDetails := &AuthorizationDetails{}
+	if err := json.NewDecoder(resp.Body).Decode(authorizationDetails); err != nil {
+		return nil, err
+	}
+
+	return authorizationDetails, nil
+}
+
 type AuthorizationsList struct {
 	Links struct {
 		Next string `json:"next"`
@@ -156,4 +187,31 @@ type SetupNewAuthorization struct {
 	OrgID       string        `json:"orgID"`
 	Permissions []Permissions `json:"permissions"`
 	Status      string        `json:"status"`
+}
+
+type AuthorizationDetails struct {
+	Status      string `json:"status"`
+	Description string `json:"description"`
+	CreatedAt   string `json:"createdAt"`
+	UpdatedAt   string `json:"updatedAt"`
+	OrgID       string `json:"orgID"`
+	Permissions []struct {
+		Action   string `json:"action"`
+		Resource struct {
+			Type  string `json:"type"`
+			Id    string `json:"id"`
+			Name  string `json:"name"`
+			OrgID string `json:"orgID"`
+			Org   string `json:"org"`
+		} `json:"resource"`
+	} `json:"permissions"`
+	Id     string `json:"id"`
+	Token  string `json:"token"`
+	UserID string `json:"userID"`
+	User   string `json:"user"`
+	Org    string `json:"org"`
+	Links  struct {
+		Self string `json:"self"`
+		User string `json:"user"`
+	} `json:"links"`
 }
