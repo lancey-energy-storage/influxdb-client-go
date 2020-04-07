@@ -31,7 +31,7 @@ func (c *Client) Ready(ctx context.Context) (*ReadyResult, error) {
 }
 
 type ReadyResult struct {
-	Started *string `json:"started,omitempty"`
-	Status  *string `json:"status,omitempty"`
-	Up      *string `json:"up,omitempty"`
+	Started string `json:"started"`
+	Status  string `json:"status"`
+	Up      string `json:"up"`
 }

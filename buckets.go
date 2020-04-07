@@ -528,18 +528,15 @@ type BucketSource struct {
 			Self    string `json:"self"`
 			Write   string `json:"write"`
 		} `json:"links"`
-		Id             string `json:"id"`
-		Type           string `json:"type"`
-		Name           string `json:"name"`
-		Description    string `json:"description"`
-		OrgId          string `json:"orgId"`
-		Rp             string `json:"rp"`
-		CreatedAt      string `json:"createdAt"`
-		UpdatedAt      string `json:"updatedAt"`
-		RetentionRules []struct {
-			Type         string `json:"type"`
-			EverySeconds int    `json:"everySeconds"`
-		} `json:"retentionRules"`
+		Id             string           `json:"id"`
+		Type           string           `json:"type"`
+		Name           string           `json:"name"`
+		Description    string           `json:"description"`
+		OrgId          string           `json:"orgId"`
+		Rp             string           `json:"rp"`
+		CreatedAt      string           `json:"createdAt"`
+		UpdatedAt      string           `json:"updatedAt"`
+		RetentionRules []RetentionRules `json:"retentionRules"`
 	} `json:"buckets"`
 	Labels []struct {
 		Id          string `json:"id"`
@@ -561,19 +558,16 @@ type BucketCreate struct {
 		Self    string `json:"self"`
 		Write   string `json:"write"`
 	} `json:"links"`
-	Id             string `json:"id"`
-	Type           string `json:"user"`
-	Name           string `json:"name"`
-	Description    string `json:"description"`
-	OrgID          string `json:"orgID"`
-	Rp             string `json:"rp"`
-	CreatedAt      string `json:"createdAt"`
-	UpdatedAt      string `json:"updatedAt"`
-	RetentionRules []struct {
-		Type         string `json:"type"`
-		EverySeconds int    `json:"everySeconds"`
-	} `json:"retentionRules"`
-	Labels []struct {
+	Id             string           `json:"id"`
+	Type           string           `json:"user"`
+	Name           string           `json:"name"`
+	Description    string           `json:"description"`
+	OrgID          string           `json:"orgID"`
+	Rp             string           `json:"rp"`
+	CreatedAt      string           `json:"createdAt"`
+	UpdatedAt      string           `json:"updatedAt"`
+	RetentionRules []RetentionRules `json:"retentionRules"`
+	Labels         []struct {
 		Id         string `json:"id"`
 		OrgID      string `json:"orgID"`
 		Name       string `json:"name"`
@@ -582,16 +576,16 @@ type BucketCreate struct {
 }
 
 type RetentionRules struct {
-	EverySeconds int
-	Type         string
+	EverySeconds int    `json:"everySeconds"`
+	Type         string `json:"type"`
 }
 
 type SetupCreateBucket struct {
-	Description    string `json:"description"`
-	Name           string `json:"name"`
-	OrgID          string `json:"orgID"`
-	RetentionRules []RetentionRules
-	Rp             string `json:"rp"`
+	Description    string           `json:"description"`
+	Name           string           `json:"name"`
+	OrgID          string           `json:"orgID"`
+	RetentionRules []RetentionRules `json:"retentionRules"`
+	Rp             string           `json:"rp"`
 }
 
 type SimpleBucket struct {
@@ -604,19 +598,16 @@ type SimpleBucket struct {
 		Self    string `json:"self"`
 		Write   string `json:"write"`
 	} `json:"links"`
-	Id             string `json:"id"`
-	Type           string `json:"user"`
-	Name           string `json:"name"`
-	Description    string `json:"description"`
-	OrgID          string `json:"orgID"`
-	Rp             string `json:"rp"`
-	CreatedAt      string `json:"createdAt"`
-	UpdatedAt      string `json:"updatedAt"`
-	RetentionRules []struct {
-		Type         string `json:"type"`
-		EverySeconds int    `json:"everySeconds"`
-	} `json:"retentionRules"`
-	Labels []struct {
+	Id             string           `json:"id"`
+	Type           string           `json:"user"`
+	Name           string           `json:"name"`
+	Description    string           `json:"description"`
+	OrgID          string           `json:"orgID"`
+	Rp             string           `json:"rp"`
+	CreatedAt      string           `json:"createdAt"`
+	UpdatedAt      string           `json:"updatedAt"`
+	RetentionRules []RetentionRules `json:"retentionRules"`
+	Labels         []struct {
 		Id         string `json:"id"`
 		OrgID      string `json:"orgID"`
 		Name       string `json:"name"`
@@ -628,17 +619,17 @@ type SimpleBucket struct {
 }
 
 type Labels struct {
-	Name       string
-	Properties string
+	Name       string `json:"name"`
+	Properties string `json:"properties"`
 }
 
 type SetupUpdateBucket struct {
-	Description    string `json:"description"`
-	Labels         []Labels
-	Name           string `json:"name"`
-	OrgID          string `json:"orgID"`
-	RetentionRules []RetentionRules
-	Rp             string `json:"rp"`
+	Description    string           `json:"description"`
+	Labels         []Labels         `json:"labels"`
+	Name           string           `json:"name"`
+	OrgID          string           `json:"orgID"`
+	RetentionRules []RetentionRules `json:"retentionRules"`
+	Rp             string           `json:"rp"`
 }
 
 type LabelsOfBucket struct {
