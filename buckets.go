@@ -161,7 +161,7 @@ func (c *Client) UpdateABucket(bucketID string, description string, labels []Lab
 		return nil, err
 	}
 
-	req, err := http.NewRequest("PATCH", c.url.String()+"/buckets/"+bucketID, bytes.NewBuffer(inputData))
+	req, err := http.NewRequest(http.MethodPatch, c.url.String()+"/buckets/"+bucketID, bytes.NewBuffer(inputData))
 	if err != nil {
 		return nil, err
 	}
