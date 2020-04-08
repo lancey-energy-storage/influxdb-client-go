@@ -620,7 +620,10 @@ type SimpleBucket struct {
 
 type Labels struct {
 	Name       string `json:"name"`
-	Properties string `json:"properties"`
+	Properties struct {
+		Color       string `json:"color"`
+		Description string `json:"description"`
+	} `json:"properties"`
 }
 
 type SetupUpdateBucket struct {
