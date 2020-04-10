@@ -3,7 +3,7 @@ package writer
 import (
 	"context"
 
-	"github.com/influxdata/influxdb-client-go"
+	"github.com/lancey-energy-storage/influxdb-client-go"
 )
 
 // BucketMetricWriter is a type which Metrics can be written to a particular bucket
