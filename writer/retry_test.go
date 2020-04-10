@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	influxdb "github.com/influxdata/influxdb-client-go"
+	"github.com/lancey-energy-storage/influxdb-client-go"
 	"github.com/stretchr/testify/assert"
 )
 

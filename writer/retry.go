@@ -3,7 +3,7 @@ package writer
 import (
 	"time"
 
-	influxdb "github.com/influxdata/influxdb-client-go"
+	"github.com/lancey-energy-storage/influxdb-client-go"
 )
 
 const defaultMaxAttempts = 5

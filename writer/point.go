@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/influxdata/influxdb-client-go"
+	"github.com/lancey-energy-storage/influxdb-client-go"
 )
 
 const defaultFlushInterval = 1 * time.Second

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/influxdata/influxdb-client-go"
+	"github.com/lancey-energy-storage/influxdb-client-go"
 )
 
 var e2e bool
@@ -28,7 +28,7 @@ func TestE2E(t *testing.T) {
 		t.Fatal(err)
 	}
 	// set up the bucket and org and get the token
-	sRes, err := influx.Setup(context.Background(), "e2e-test-bucket", "e2e-test-org", 0)
+	sRes, err := influx.Setup(context.Background(), "e2e-test-user", "e2e-test-password", "e2e-test-bucket", "e2e-test-org", 2)
 	if err != nil {
 		t.Fatal(err)
 	}
