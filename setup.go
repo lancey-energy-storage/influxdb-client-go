@@ -5,18 +5,19 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 )
 
-// Setup sets up a new influxdb server.
+// Setup sets up a new influxdbv2 server.
 // It requires a client be set up with a username and password.
 // If successful will add a token to the client.
 // RetentionPeriodHrs of zero will result in infinite retention.
-func (c *Client) Setup(ctx context.Context, bucket, org string, retentionPeriodHrs int) (*SetupResult, error) {
+func (c *Client) Setup(ctx context.Context, bucket string, org string, retentionPeriodHrs int) (*SetupResult, error) {
 	if c.username == "" || c.password == "" {
-		return nil, errors.New("a username and password is requred for a setup")
+		return nil, errors.New("a username and password is required for a setup")
 	}
-
+	log.Printf("[DEBUG] Setup a new influxdbv2 instance")
 	inputData, err := json.Marshal(SetupRequest{
 		Username:           c.username,
 		Password:           c.password,
@@ -50,6 +51,27 @@ func (c *Client) Setup(ctx context.Context, bucket, org string, retentionPeriodH
 		c.l.Unlock()
 	}
 	return setupResult, nil
+}
+
+func (c *Client) GetSetup() (*Setup, error) {
+	log.Printf("[DEBUG] Getting setup status")
+
+	req, err := http.NewRequest(http.MethodGet, c.url.String()+"/setup", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/json; charset=utf-8")
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	setup := &Setup{}
+	if err := json.NewDecoder(resp.Body).Decode(setup); err != nil {
+		return nil, err
+	}
+	return setup, nil
 }
 
 // SetupRequest is a request to setup a new influx instance.
@@ -127,4 +149,8 @@ type SetupResult struct {
 			User string `json:"user"`
 		} `json:"links"`
 	} `json:"auth"`
+}
+
+type Setup struct {
+	Allowed bool `json:"allowed"`
 }

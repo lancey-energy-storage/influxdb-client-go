@@ -8,10 +8,10 @@ import (
 	"net/url"
 )
 
-func (c *Client) Ready(ctx context.Context) (*ReadyResult, error) {
-	log.Printf("[DEBUG] Pinging resource ")
+func (c *Client) GetHealth(ctx context.Context) (*Health, error) {
+	log.Printf("[DEBUG] Getting health of resource ")
 	pingUrl, _ := url.Parse(c.url.String())
-	pingUrl.Path = "/ready"
+	pingUrl.Path = "/health"
 
 	req, err := http.NewRequest(http.MethodGet, pingUrl.String(), nil)
 	if err != nil {
@@ -22,16 +22,17 @@ func (c *Client) Ready(ctx context.Context) (*ReadyResult, error) {
 	resp, err := c.httpClient.Do(req)
 
 	defer resp.Body.Close()
-	readyResult := &ReadyResult{}
+	health := &Health{}
 
-	if err := json.NewDecoder(resp.Body).Decode(readyResult); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(health); err != nil {
 		return nil, err
 	}
-	return readyResult, nil
+	return health, nil
 }
 
-type ReadyResult struct {
-	Started string `json:"started"`
-	Status  string `json:"status"`
-	Up      string `json:"up"`
+type Health struct {
+	Name    string     `json:"name"`
+	Message string     `json:"message"`
+	Checks  []struct{} `json:"checks"`
+	Status  string     `json:"status"`
 }
