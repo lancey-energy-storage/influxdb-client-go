@@ -13,10 +13,12 @@ import (
 // It requires a client be set up with a username and password.
 // If successful will add a token to the client.
 // RetentionPeriodHrs of zero will result in infinite retention.
-func (c *Client) Setup(ctx context.Context, bucket string, org string, retentionPeriodHrs int) (*SetupResult, error) {
-	if c.username == "" || c.password == "" {
+func (c *Client) Setup(ctx context.Context, username, password, bucket string, org string, retentionPeriodHrs int) (*SetupResult, error) {
+	if username == "" || password == "" {
 		return nil, errors.New("a username and password is required for a setup")
 	}
+	c.username = username
+	c.password = password
 	log.Printf("[DEBUG] Setup a new influxdbv2 instance")
 	inputData, err := json.Marshal(SetupRequest{
 		Username:           c.username,
@@ -28,7 +30,7 @@ func (c *Client) Setup(ctx context.Context, bucket string, org string, retention
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest("POST", c.url.String()+"/setup", bytes.NewBuffer(inputData))
+	req, err := http.NewRequest(http.MethodPost, c.url.String()+"/setup", bytes.NewBuffer(inputData))
 	if err != nil {
 		return nil, err
 	}
