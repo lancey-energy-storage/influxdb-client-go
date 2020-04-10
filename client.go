@@ -111,8 +111,5 @@ func (c *Client) Close() error {
 }
 
 func (c *Client) GetUrl() (string, error) {
-	if c.url.String() == "" {
-		return "", nil
-	}
 	return c.url.String(), nil
 }
