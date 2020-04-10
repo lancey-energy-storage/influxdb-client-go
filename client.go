@@ -109,3 +109,10 @@ func (c *Client) Close() error {
 	c.httpClient.CloseIdleConnections()
 	return nil // we do this, so it qualifies as a closer.
 }
+
+func (c *Client) GetUrl() (string, error) {
+	if c.url.String() != "" {
+		return c.url.String(), nil
+	}
+	return "", nil
+}
