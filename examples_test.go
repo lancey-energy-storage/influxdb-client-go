@@ -16,7 +16,7 @@ import (
 	"text/template"
 	"time"
 
-	influxdb "github.com/influxdata/influxdb-client-go"
+	"github.com/lancey-energy-storage/influxdb-client-go"
 )
 
 func writeHandler(w http.ResponseWriter, r *http.Request) {
@@ -277,7 +277,7 @@ func ExampleClient_Setup() {
 	if err != nil {
 		panic(err) // error handling here, normally we wouldn't use fmt, but it works for the example
 	}
-	resp, err := influx.Setup(context.Background(), "my-bucket", "my-org", 32)
+	resp, err := influx.Setup(context.Background(), "my-user", "my-password", "my-bucket", "my-org", 32)
 	if err != nil {
 		log.Fatal(err)
 	}
